@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+hello-world-app/node_modules/
+
+# Next.js
+.next/
+out/
+
+# Env and secrets
+.env
+.env.local
+.env.*.local
+
+# Prisma
+*.db
+*.db-journal
+
+# Build and test
+dist/
+coverage/
+.vitest/
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs and cache
+*.log
+.npm
+.cache

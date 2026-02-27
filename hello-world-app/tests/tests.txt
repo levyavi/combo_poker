@@ -1,0 +1,92 @@
+# Tests
+
+## Test 1 - App loads and shows Conference Icebreaker [sanity]
+Viewport: desktop
+Description: Verifies the app loads and shows the main Conference Icebreaker message.
+
+Steps:
+1. Navigate to the app
+2. Wait for page to fully load
+
+Expected: "Conference Icebreaker" heading is visible on the page.
+
+## Test 2 - Admin Panel link visible
+Viewport: desktop
+Description: Verifies Admin Panel link is present on home page.
+
+Steps:
+1. Navigate to the app
+2. Wait for page to load
+
+Expected: "Admin Panel" link or button is visible.
+
+## Test 3 - Admin create event and login
+Viewport: desktop
+Description: Verifies admin can create event and login with PIN.
+
+Steps:
+1. Navigate to /admin
+2. Create event with code (5-10 chars), PIN, duration
+3. Expect redirect to dashboard or create success
+4. Log out or open new session, go to /admin
+5. Login with same event code and PIN
+
+Expected: Create succeeds; login succeeds and shows dashboard.
+
+## Test 4 - Duplicate event code fails
+Viewport: desktop
+Description: Creating event with duplicate code fails.
+
+Steps:
+1. Create event with code EVT001 and a PIN
+2. Try to create another event with same code EVT001
+
+Expected: Second create fails with error (duplicate/conflict).
+
+## Test 5 - Wrong PIN fails
+Viewport: desktop
+Description: Login with wrong PIN fails.
+
+Steps:
+1. Create an event with code and PIN
+2. Login with same code but wrong PIN
+
+Expected: Login fails with error.
+
+## Test 6 - Start round sets state ACTIVE
+Viewport: desktop
+Description: Start round sets round state to ACTIVE.
+
+Steps:
+1. Login as admin
+2. Click Start round
+
+Expected: Dashboard shows round state ACTIVE.
+
+## Test 7 - End round sets state ENDED
+Viewport: desktop
+Description: End round sets round state to ENDED.
+
+Steps:
+1. Login as admin, start round
+2. Click End round
+
+Expected: Dashboard shows round state ENDED.
+
+## Test 8 - Session required for protected endpoints
+Viewport: desktop
+Description: Protected admin endpoints require session cookie.
+
+Steps:
+1. Without logging in, call GET /admin/event (e.g. via dev tools or API client)
+
+Expected: Returns 401 or session required.
+
+## Test 9 - npm test exits 0
+Viewport: desktop
+Description: Programmatic tests pass offline.
+
+Steps:
+1. Run npm test in project root
+
+Expected: All tests pass, exit code 0.
