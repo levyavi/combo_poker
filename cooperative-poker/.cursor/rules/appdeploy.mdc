@@ -1,0 +1,48 @@
+---
+description: AppDeploy platform constraints and auth—avoid repeat mistakes
+globs: backend/index.ts, pages/admin.tsx, **/appdeploy*
+alwaysApply: true
+---
+
+# AppDeploy Cooperative Poker: Do Not Repeat
+
+## Persistence
+- **On deploy:** No filesystem. Do not use Prisma directly. Use `@appdeploy/sdk` → `db` (add/get/list/update/delete). Keep a local Prisma adapter in try/catch for dev and Vitest.
+- **DbClient:** Use a small interface; `get`/`list` return `DbRecord` (not generic `<T>`) to satisfy platform TypeScript.
+
+## Auth when frontend and API are cross-origin
+- Cookies are often not sent cross-origin. **Always support Bearer token as well:** backend reads session from cookie OR `Authorization: Bearer <token>` OR `X-Admin-Session` OR **query param `session_token`** (in case the client does not forward custom headers). Return `session_token` in create/login JSON. Frontend: store token in sessionStorage; send it via header and **append `?session_token=...` to admin API URLs** so auth works even when the client drops headers; on 401 clear token and show login.
+
+## CORS
+- Do not use `Access-Control-Allow-Origin: "*"` with credentials. Set `Access-Control-Allow-Origin` to the request `Origin` and `Access-Control-Allow-Credentials: true`. Allow headers: `Content-Type`, `Authorization`, `X-Admin-Session`.
+
+## Frontend API client (`@appdeploy/client`)
+- **Response shape:** Not always fetch `Response`. Use a `normalizeResponse(res)` that handles fetch-like `.text()`/`.json()`, axios-like `{ data, status }`, or direct body; return `{ ok, status, data }`.
+- **POST body:** Send as `{ body: JSON.stringify(payload), headers: authHeaders() }`. Do not assume the client accepts a plain object as body.
+- **Types:** Declare `api.get(url, { headers?: Record<string, string> })` and `api.post(url, { body?: string, headers?: ... })` in a `.d.ts` so both forms type-check.
+
+## deploy_app (MCP)
+- **Diffs:** The `from` string must match the **currently deployed** file exactly (whitespace, quotes). If validation says "'from' value not found", use `src_read` to read the deployed file and match it. Prefer one or a few small diffs per deploy.
+
+## TypeScript
+- No implicit `any`. In Prisma adapter callbacks (e.g. `rows.map`), annotate the parameter type explicitly (e.g. `(r: EventRow)`).
+
+## DB and API (fresh data, no backwards compat)
+
+- **Snake_case only.** Schema and API use snake_case (`event_id`, `event_code`, `round_state`, `player_id`, etc.). No camelCase fallbacks.
+
+- **`db.update` requires valid `id`.** Before every update ensure the record has an `id`; if not, return 500 with a clear error.
+
+- **Never pass undefined into `db.list` filter.** Ensure every filter value is defined.
+
+- **Event lookup by `event_code`:** If `db.list(EVENTS_TABLE, { filter: { event_code } })` is empty, fallback: `db.list(EVENTS_TABLE, { limit: 100 })` and find in memory by `event_code`. Used in `postEventEnter` and `postPlayerCreateOrLoad`.
+
+- **Prefer lookup by primary key when the client has it.** When `player_id` is present, use `db.get(PLAYERS_TABLE, [playerId])`.
+
+## Profile and player identity (do not repeat)
+
+- **create_or_load must accept and use `player_id` first.** Backend: at the start of `postPlayerCreateOrLoad`, if the request body contains `player_id` (or `playerId`), call `db.get(PLAYERS_TABLE, [playerIdParam])`, return that player’s full profile (display_name, workplace, title, interests, etc.), and exit. Only when `player_id` is absent should the handler use `event_code` + `device_session_token` and `db.list` (or create a new player). This ensures the same player row is always returned when the client already knows who they are.
+
+- **Frontend: send stored `player_id` when loading profile.** When the profile page (or any flow that needs the current player) calls `create_or_load`, include `player_id` from sessionStorage in the request body if present. That way the backend uses `db.get` and returns the correct player’s saved profile.
+
+- **Do not overwrite sessionStorage `player_id` with the API response when the client sent `player_id`.** If the client sent `player_id` in the request, the stored identity must stay the one the client had. Only set sessionStorage `player_id` from the response when the client did **not** send one (e.g. first load or new session). Otherwise a response from a different code path (e.g. `list()` returning another player row) can overwrite the stored id and switch the user to the wrong player, causing empty or wrong profile data on re-enter.

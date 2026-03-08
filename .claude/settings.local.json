@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_AppDeploy__get_apps",
+      "mcp__claude_ai_AppDeploy__get_app_status",
+      "mcp__claude_ai_AppDeploy__src_grep",
+      "mcp__claude_ai_AppDeploy__src_glob",
+      "mcp__claude_ai_AppDeploy__src_read",
+      "mcp__claude_ai_AppDeploy__get_deploy_instructions",
+      "mcp__claude_ai_AppDeploy__deploy_app",
+      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) keys = list\\(data.keys\\(\\)\\) print\\(''Top-level keys:'', keys\\) \")",
+      "Bash(cat:*)",
+      "Bash(claude mcp:*)",
+      "mcp__AppDeploy__get_apps",
+      "mcp__AppDeploy__get_app_status",
+      "mcp__AppDeploy__get_app_versions",
+      "mcp__AppDeploy__src_glob",
+      "mcp__AppDeploy__get_deploy_instructions",
+      "mcp__AppDeploy__deploy_app",
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(xargs wc:*)",
+      "mcp__AppDeploy__src_read",
+      "Bash(gh auth:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(magick:*)",
+      "Bash(pip install:*)",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "mcp__AppDeploy__update_coding_progress",
+      "mcp__AppDeploy__src_grep",
+      "Bash(python -m json.tool)",
+      "Bash(python:*)",
+      "Bash(sed:*)"
+    ]
+  }
+}

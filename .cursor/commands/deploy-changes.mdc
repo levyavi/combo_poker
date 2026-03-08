@@ -1,0 +1,46 @@
+---
+description: Incremental AppDeploy of only the changed Cooperative Poker files.
+globs: cooperative-poker/**
+---
+
+## Command: deploy-changes
+
+When I run this command from the repo root, do the following:
+
+1. **Determine changed files**
+   - Run `git status --porcelain=v1` from the project root.
+   - Consider lines starting with `M`, `A`, `R`, or `D` as "changed" (modified/added/renamed/deleted).
+   - Build a list of changed files **relative to the `cooperative-poker` folder** (for example: `backend/index.ts`, `pages/admin.tsx`).
+
+2. **Filter to files that are actually deployed**
+   - Only include files that are part of the AppDeploy app:
+     - `backend/*.ts`
+     - `pages/**/*.tsx`
+   - Ignore test files, Prisma migrations, local dev scripts, etc.
+
+3. **Fetch currently deployed source for each changed file**
+   - For each changed file that will be deployed, call the AppDeploy MCP **src_read** (or equivalent "read deployed file" tool) for that filename to get the **exact currently deployed** source.
+   - If the file does not yet exist in the deployed app (e.g. newly added), treat the "from" content as an empty string.
+
+4. **Prepare a minimal diff-based deploy payload**
+   - For each changed file:
+     - Read the latest local file content from disk.
+     - Construct a `diffs` entry whose `from` string is the full deployed file content from step 3 and whose `to` string is the full local file content.
+     - Ensure the `from` value matches the deployed source exactly (whitespace and quotes) so AppDeploy validation passes.
+   - Create a single AppDeploy **deploy_app** request body using:
+     - `app_id: "9fa3fb53f2ea4bc3b5"`
+     - `app_type: "frontend+backend"`
+     - `app_name: "Cooperative Poker"`
+     - `model: "cursor"`
+     - `intent`: A short description like "Deploy changed files only: <comma-separated list>".
+     - `diffs`: The array of per-file `from`/`to` entries.
+
+5. **Run the incremental deploy**
+   - Call the AppDeploy MCP **deploy_app** tool with the diff-based payload from step 4.
+   - Poll for status until the deploy completes or fails.
+   - If the deploy fails because a `from` value does not match, re-run `src_read` for the offending file, update the `from` to match, and retry that file's diff.
+
+6. **Report outcome**
+   - Summarize which files were included in the incremental deploy and the final status.
+   - Remind the user of the live URL `https://9fa3fb53f2ea4bc3b5.v2.appdeploy.ai/` and suggest a hard refresh of any affected pages.
+

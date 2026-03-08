@@ -1,9 +1,0 @@
-{
-  "name": "Conference Icebreaker",
-  "short_name": "Icebreaker",
-  "description": "Conference icebreaker poker app with admin event and round lifecycle.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#0f172a"
-}

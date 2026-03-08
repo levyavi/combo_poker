@@ -1,0 +1,33 @@
+---
+description: Full AppDeploy of Cooperative Poker frontend and backend using prebuilt payload JSON files.
+globs: cooperative-poker/**
+---
+
+## Command: deploy-all
+
+When I run this command, do the following from the `cooperative-poker` app:
+
+1. **Ensure payload JSON files exist and are fresh**
+   - Check for `deploy-fe-1.json` through `deploy-fe-4.json` and `deploy-iter1.json` through `deploy-iter3.json` in the `cooperative-poker` folder.
+   - If any are missing or clearly outdated (e.g. after significant code changes), run:
+     - `npm run deploy-changes`
+   - This runs `node scripts/deploy-everything.js` to regenerate all AppDeploy payload files from the current source.
+
+2. **Deploy frontend and backend in order using AppDeploy**
+   - Use the AppDeploy MCP **deploy_app** tool with each JSON payload **in this order**:
+     1. `deploy-fe-1.json`
+     2. `deploy-fe-2.json`
+     3. `deploy-fe-3.json`
+     4. `deploy-fe-4.json`
+     5. `deploy-iter1.json`
+     6. `deploy-iter2.json`
+     7. `deploy-iter3.json`
+   - For each file:
+     - Load or paste the JSON content as the `deploy_app` request body.
+     - Wait for the deploy step to complete before moving on to the next file.
+     - Report concise status updates and any AppDeploy errors back to the user.
+
+3. **After successful full deploy**
+   - Remind the user of the live URL: `https://9fa3fb53f2ea4bc3b5.v2.appdeploy.ai/`.
+   - Suggest a hard refresh of the browser (Ctrl+Shift+R / Cmd+Shift+R) on any open pages (especially profile and admin) to ensure the new bundle is loaded.
+

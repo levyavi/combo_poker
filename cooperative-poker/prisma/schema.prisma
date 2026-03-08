@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id                         String    @id @default(uuid())
+  event_code                 String    @unique
+  event_title                String    @default("")
+  openai_api_key             String?
+  combo_pair_cooldown_minutes Int      @default(5)
+  hand_scores                String?   // JSON: { "High card": 1, "One pair": 2, ... }
+  llm_instructions           String?   @default("")
+  event_description          String?   @default("")
+  round_state                String    @default("NOT_STARTED") // NOT_STARTED | ACTIVE | ENDED
+  round_started_at           DateTime?
+  round_ended_at             DateTime?
+  created_at                 DateTime  @default(now())
+  updated_at                 DateTime  @updatedAt
+
+  players          Player[]
+  decks            Deck[]
+  combo_sessions   ComboSession[]
+  interaction_edges InteractionEdge[]
+}
+
+model Player {
+  id                   String    @id @default(uuid())
+  event_id             String
+  device_session_token String?
+  display_name         String    @default("")
+  hand_cards           String    @default("[]") // JSON array of 4 card strings e.g. ["AS","2H","QC","10D"]
+  joined_round_at      DateTime?
+  total_score          Int       @default(0)
+  workplace            String?
+  title                String?
+  interests            String?
+  email                String?
+  phone                String?
+  linkedin_url         String?
+  website_url          String?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+}
+
+model ComboSession {
+  id                 String    @id @default(uuid())
+  event_id           String
+  leader_player_id   String
+  invite_code        String    // 5-digit single-use
+  invitee_player_id  String?
+  state              String    @default("PENDING") // PENDING | SELECTING | SUBMITTED | CANCELLED
+  leader_hand        String    // JSON array of 4 cards
+  invitee_hand       String    @default("[]") // JSON array of 4 cards
+  selected_cards     String?   // JSON array of up to 5 cards (leader selection, auto-fill if < 5)
+  score_awarded      Int?
+  hand_rank_name     String?
+  icebreak_question  String?   // generated once per combo, same for both participants
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  submitted_at       DateTime?
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+}
+
+model InteractionEdge {
+  id            String   @id @default(uuid())
+  event_id      String
+  player_a_id   String   // canonical: min(leader, invitee)
+  player_b_id   String   // canonical: max(leader, invitee)
+  last_combo_at DateTime
+  created_at    DateTime @default(now())
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@unique([event_id, player_a_id, player_b_id])
+}
+
+model Deck {
+  id             String   @id @default(uuid())
+  event_id       String
+  deck_index     Int      // 0, 1, 2... when deck exhausted open next
+  remaining_cards String  // JSON array of card strings
+  created_at     DateTime @default(now())
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+}
